@@ -687,7 +687,8 @@
       alert('Could not save entry: ' + error.message);
       return;
     }
-    // Real-time subscription will replace temp entry with the confirmed one
+    // Replace temp entry with confirmed server data
+    await loadEntries();
   });
 
   document.getElementById('clearBtn').addEventListener('click', async () => {
