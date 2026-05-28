@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fish Tank Cleaning Log</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,20 +23,9 @@
       padding: 28px 48px 0;
     }
 
-    header h1 {
-      font-size: 2.2rem;
-      font-weight: normal;
-      margin-bottom: 4px;
-    }
+    header h1 { font-size: 2.2rem; font-weight: normal; margin-bottom: 4px; }
+    header p  { font-size: 0.95rem; color: #555; font-style: italic; margin-bottom: 20px; }
 
-    header p {
-      font-size: 0.95rem;
-      color: #555;
-      font-style: italic;
-      margin-bottom: 20px;
-    }
-
-    /* ── Tabs ── */
     .tabs { display: flex; }
 
     .tab-btn {
@@ -54,14 +44,11 @@
     .tab-btn.active { background: #000; color: #fff; }
     .tab-btn:not(.active):hover { color: #000; }
 
-    /* ── Tab panels ── */
     .tab-panel { display: none; }
     .tab-panel.active { display: flex; flex: 1; }
 
-    /* ── Log tab ── */
     #tab-log { flex-direction: row; min-height: calc(100vh - 120px); }
 
-    /* ── Form panel ── */
     .form-panel {
       width: 380px;
       flex-shrink: 0;
@@ -108,20 +95,11 @@
     input[type="text"]:focus,
     input[type="date"]:focus,
     select:focus,
-    textarea:focus {
-      box-shadow: 0 0 0 2px #000;
-    }
+    textarea:focus { box-shadow: 0 0 0 2px #000; }
 
-    input[type="date"] {
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
+    input[type="date"] { cursor: pointer; font-size: 0.95rem; }
 
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-      line-height: 1.5;
-    }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 
     select {
       cursor: pointer;
@@ -138,12 +116,7 @@
       align-items: center;
     }
 
-    .time-colon {
-      text-align: center;
-      font-size: 1.1rem;
-      color: #999;
-      line-height: 1;
-    }
+    .time-colon { text-align: center; font-size: 1.1rem; color: #999; }
 
     .btn-primary {
       width: 100%;
@@ -159,6 +132,7 @@
     }
 
     .btn-primary:hover { background: #333; }
+    .btn-primary:disabled { background: #999; cursor: default; }
 
     .success-msg {
       margin-top: 12px;
@@ -172,7 +146,6 @@
 
     .success-msg.show { opacity: 1; }
 
-    /* ── History panel ── */
     .log-panel {
       flex: 1;
       padding: 36px 40px;
@@ -190,23 +163,11 @@
       border-bottom: 1px solid #ddd;
     }
 
-    .log-top h2 {
-      font-size: 1.1rem;
-      font-weight: normal;
-    }
+    .log-top h2 { font-size: 1.1rem; font-weight: normal; }
 
-    .log-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .log-actions { display: flex; align-items: center; gap: 8px; }
 
-    .log-count {
-      font-size: 0.82rem;
-      color: #888;
-      font-style: italic;
-      margin-right: 4px;
-    }
+    .log-count { font-size: 0.82rem; color: #888; font-style: italic; margin-right: 4px; }
 
     .ghost-btn {
       font-family: 'Times New Roman', Times, serif;
@@ -234,7 +195,6 @@
 
     .download-btn:hover { background: #333; }
 
-    /* Period filter */
     .period-filter {
       display: flex;
       gap: 6px;
@@ -253,24 +213,12 @@
       transition: all 0.15s;
     }
 
-    .filter-btn.active {
-      background: #000;
-      color: #fff;
-      border-color: #000;
-    }
-
+    .filter-btn.active { background: #000; color: #fff; border-color: #000; }
     .filter-btn:not(.active):hover { border-color: #000; color: #000; }
 
-    .entries {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    .entries { display: flex; flex-direction: column; gap: 12px; }
 
-    .entry-card {
-      border: 1px solid #000;
-      padding: 16px 18px;
-    }
+    .entry-card { border: 1px solid #000; padding: 16px 18px; }
 
     .entry-top {
       display: flex;
@@ -280,26 +228,11 @@
       margin-bottom: 6px;
     }
 
-    .entry-tank {
-      font-size: 1.1rem;
-      font-weight: bold;
-      line-height: 1.2;
-    }
+    .entry-tank { font-size: 1.1rem; font-weight: bold; line-height: 1.2; }
 
-    .entry-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-      flex-shrink: 0;
-    }
+    .entry-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 
-    .entry-time {
-      font-size: 0.8rem;
-      color: #666;
-      font-style: italic;
-      white-space: nowrap;
-    }
+    .entry-time { font-size: 0.8rem; color: #666; font-style: italic; white-space: nowrap; }
 
     .delete-btn {
       font-family: 'Times New Roman', Times, serif;
@@ -315,11 +248,7 @@
 
     .delete-btn:hover { border-color: #000; color: #000; }
 
-    .entry-sub {
-      font-size: 0.85rem;
-      color: #555;
-      margin-bottom: 2px;
-    }
+    .entry-sub { font-size: 0.85rem; color: #555; margin-bottom: 2px; }
 
     .entry-period-tag {
       display: inline-block;
@@ -349,17 +278,18 @@
       font-size: 1rem;
     }
 
-    /* ── Manage tab ── */
-    #tab-manage {
-      flex-direction: row;
-      align-items: flex-start;
-      min-height: calc(100vh - 120px);
+    .status-bar {
+      font-size: 0.78rem;
+      font-style: italic;
+      color: #aaa;
+      margin-bottom: 14px;
     }
 
-    .manage-section {
-      flex: 1;
-      padding: 36px 40px;
-    }
+    .status-bar.error { color: #c00; }
+
+    #tab-manage { flex-direction: row; align-items: flex-start; min-height: calc(100vh - 120px); }
+
+    .manage-section { flex: 1; padding: 36px 40px; }
 
     .manage-section h2 {
       font-size: 1.1rem;
@@ -369,12 +299,7 @@
       border-bottom: 1px solid #ddd;
     }
 
-    .add-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-
+    .add-row { display: flex; gap: 8px; margin-bottom: 20px; }
     .add-row input { flex: 1; }
 
     .add-row button {
@@ -416,20 +341,13 @@
     }
 
     .remove-btn:hover { border-color: #000; color: #000; }
-
-    .list-empty {
-      font-style: italic;
-      color: #ccc;
-      font-size: 0.88rem;
-      padding: 10px 0;
-    }
+    .list-empty { font-style: italic; color: #ccc; font-size: 0.88rem; padding: 10px 0; }
 
     @media (max-width: 780px) {
       header { padding: 20px 20px 0; }
       #tab-log, #tab-manage { flex-direction: column; }
       .form-panel { width: 100%; border-right: none; border-bottom: 2px solid #000; }
-      .log-panel { padding: 28px 20px; }
-      .manage-section { padding: 28px 20px; }
+      .log-panel, .manage-section { padding: 28px 20px; }
     }
   </style>
 </head>
@@ -446,7 +364,6 @@
 
 <!-- LOG TAB -->
 <div class="tab-panel active" id="tab-log">
-
   <section class="form-panel">
     <h2 class="panel-title">New Entry</h2>
     <form id="logForm">
@@ -498,7 +415,7 @@
         <textarea id="fNotes"></textarea>
       </div>
 
-      <button type="submit" class="btn-primary">Log Cleaning</button>
+      <button type="submit" class="btn-primary" id="submitBtn">Log Cleaning</button>
       <p class="success-msg" id="successMsg">Entry saved.</p>
     </form>
   </section>
@@ -522,6 +439,7 @@
       <button class="filter-btn" data-period="F">Period F</button>
     </div>
 
+    <p class="status-bar" id="statusBar">Loading…</p>
     <div class="entries" id="entries"></div>
   </section>
 </div>
@@ -539,12 +457,14 @@
 </div>
 
 <script>
-  // ── Storage ───────────────────────────────────────────────────────────────
-  const S = {
-    get: (k, fb) => { try { return JSON.parse(localStorage.getItem(k)) ?? fb; } catch { return fb; } },
-    set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-  };
-  const K = { log: 'ftl_log', tanks: 'ftl_tanks' };
+  // ─────────────────────────────────────────────────────────────────────────
+  //  PASTE YOUR SUPABASE CREDENTIALS HERE
+  // ─────────────────────────────────────────────────────────────────────────
+  const SUPABASE_URL  = 'https://vhxmouguuuxcwambvaqb.supabase.co';
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoeG1vdWd1dXV4Y3dhbWJ2YXFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMDA4MzgsImV4cCI6MjA5NTU3NjgzOH0.6wOxWcerfFpkl4euKljRqRzrr58hJp-Gvg0ncxg9w2E';
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -563,7 +483,7 @@
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ── Time picker setup ─────────────────────────────────────────────────────
+  // ── Time picker ───────────────────────────────────────────────────────────
   (function buildTimePicker() {
     const hourSel = document.getElementById('fHour');
     for (let h = 1; h <= 12; h++) {
@@ -574,8 +494,7 @@
     const minSel = document.getElementById('fMinute');
     for (let m = 0; m < 60; m += 5) {
       const o = document.createElement('option');
-      o.value = String(m).padStart(2, '0');
-      o.textContent = String(m).padStart(2, '0');
+      o.value = String(m).padStart(2,'0'); o.textContent = String(m).padStart(2,'0');
       minSel.appendChild(o);
     }
   })();
@@ -583,77 +502,88 @@
   function setDefaultDateTime() {
     const now = new Date();
     const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
+    const mm   = String(now.getMonth()+1).padStart(2,'0');
+    const dd   = String(now.getDate()).padStart(2,'0');
     document.getElementById('fDate').value = `${yyyy}-${mm}-${dd}`;
     let h = now.getHours();
     const ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12 || 12;
-    document.getElementById('fHour').value = String(h);
-    const roundedMin = String(Math.round(now.getMinutes() / 5) * 5 % 60).padStart(2, '0');
-    document.getElementById('fMinute').value = roundedMin;
-    document.getElementById('fAmpm').value = ampm;
+    document.getElementById('fHour').value  = String(h);
+    document.getElementById('fMinute').value = String(Math.round(now.getMinutes()/5)*5%60).padStart(2,'0');
+    document.getElementById('fAmpm').value  = ampm;
   }
 
   function formatEntryTime(e) {
-    const [year, month, day] = e.date.split('-').map(Number);
-    const d = new Date(year, month - 1, day);
-    const dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const [yr, mo, dy] = e.date.split('-').map(Number);
+    const dateStr = new Date(yr, mo-1, dy).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
     return `${dateStr} · ${e.hour}:${e.minute} ${e.ampm}`;
   }
 
+  // ── Status bar ────────────────────────────────────────────────────────────
+  function setStatus(msg, isError = false) {
+    const el = document.getElementById('statusBar');
+    el.textContent = msg;
+    el.className = 'status-bar' + (isError ? ' error' : '');
+  }
+
   // ── Tank dropdown ─────────────────────────────────────────────────────────
+  let cachedTanks = [];
+
   function refreshTankDropdown() {
-    const tanks = S.get(K.tanks, []);
     const sel = document.getElementById('fTank');
     const prev = sel.value;
     sel.innerHTML = '<option value="" disabled>Select a tank…</option>';
-    tanks.forEach(t => {
+    cachedTanks.forEach(t => {
       const o = document.createElement('option');
       o.value = t; o.textContent = t;
       sel.appendChild(o);
     });
-    if (tanks.includes(prev)) sel.value = prev; else sel.value = '';
+    if (cachedTanks.includes(prev)) sel.value = prev; else sel.value = '';
   }
 
-  // ── Manage tanks ──────────────────────────────────────────────────────────
+  async function loadTanks() {
+    const { data, error } = await sb.from('tanks').select('name').order('name');
+    if (error) { console.error(error); return; }
+    cachedTanks = data.map(r => r.name);
+    refreshTankDropdown();
+    renderTankList();
+  }
+
   function renderTankList() {
-    const tanks = S.get(K.tanks, []);
     const el = document.getElementById('tankList');
-    if (!tanks.length) { el.innerHTML = '<p class="list-empty">No tanks added yet.</p>'; return; }
-    el.innerHTML = tanks.map((t, i) => `
+    if (!cachedTanks.length) { el.innerHTML = '<p class="list-empty">No tanks added yet.</p>'; return; }
+    el.innerHTML = cachedTanks.map(t => `
       <div class="item-row">
         <span>${esc(t)}</span>
-        <button class="remove-btn" data-index="${i}">Remove</button>
+        <button class="remove-btn" data-name="${esc(t)}">Remove</button>
       </div>
     `).join('');
   }
 
-  function renderManage() { renderTankList(); refreshTankDropdown(); }
-
-  document.getElementById('tankList').addEventListener('click', e => {
-    if (!e.target.classList.contains('remove-btn')) return;
-    const tanks = S.get(K.tanks, []);
-    tanks.splice(parseInt(e.target.dataset.index, 10), 1);
-    S.set(K.tanks, tanks);
-    renderManage();
-  });
-
-  function addTank() {
+  async function addTank() {
     const input = document.getElementById('newTank');
     const val = input.value.trim();
     if (!val) return;
-    const tanks = S.get(K.tanks, []);
-    if (!tanks.includes(val)) { tanks.push(val); tanks.sort((a, b) => a.localeCompare(b)); S.set(K.tanks, tanks); }
+    const { error } = await sb.from('tanks').insert({ name: val });
+    if (error) { alert('Could not add tank: ' + error.message); return; }
     input.value = '';
-    renderManage();
+    await loadTanks();
   }
+
+  document.getElementById('tankList').addEventListener('click', async e => {
+    if (!e.target.classList.contains('remove-btn')) return;
+    const name = e.target.dataset.name;
+    const { error } = await sb.from('tanks').delete().eq('name', name);
+    if (error) { alert('Could not remove tank: ' + error.message); return; }
+    await loadTanks();
+  });
 
   document.getElementById('addTankBtn').addEventListener('click', addTank);
   document.getElementById('newTank').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTank(); } });
 
   // ── Period filter ─────────────────────────────────────────────────────────
   let activePeriod = 'All';
+  let cachedEntries = [];
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -665,12 +595,25 @@
   });
 
   // ── Log entries ───────────────────────────────────────────────────────────
-  function renderEntries() {
-    const all = S.get(K.log, []);
-    const filtered = activePeriod === 'All' ? all : all.filter(e => e.period === activePeriod);
-    const countEl = document.getElementById('logCount');
+  async function loadEntries() {
+    const { data, error } = await sb
+      .from('log_entries')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) { setStatus('Error loading entries.', true); console.error(error); return; }
+    cachedEntries = data;
+    renderEntries();
+    setStatus(`Last updated ${new Date().toLocaleTimeString()}`);
+  }
 
-    countEl.textContent = all.length === 0 ? '' : all.length === 1 ? '1 entry' : `${all.length} entries`;
+  function renderEntries() {
+    const filtered = activePeriod === 'All'
+      ? cachedEntries
+      : cachedEntries.filter(e => e.period === activePeriod);
+
+    const countEl = document.getElementById('logCount');
+    const total = cachedEntries.length;
+    countEl.textContent = total === 0 ? '' : total === 1 ? '1 entry' : `${total} entries`;
 
     const container = document.getElementById('entries');
     if (!filtered.length) {
@@ -680,13 +623,13 @@
       return;
     }
 
-    container.innerHTML = filtered.slice().reverse().map(e => `
+    container.innerHTML = filtered.map(e => `
       <div class="entry-card">
         <div class="entry-top">
           <div class="entry-tank">${esc(e.tank)}</div>
           <div class="entry-right">
             <span class="entry-time">${formatEntryTime(e)}</span>
-            <button class="delete-btn" data-id="${esc(e._id)}">Remove</button>
+            <button class="delete-btn" data-id="${esc(e.id)}">Remove</button>
           </div>
         </div>
         <div class="entry-sub">
@@ -697,17 +640,21 @@
     `).join('');
   }
 
-  document.getElementById('entries').addEventListener('click', e => {
+  document.getElementById('entries').addEventListener('click', async e => {
     if (!e.target.classList.contains('delete-btn')) return;
     const id = e.target.dataset.id;
-    S.set(K.log, S.get(K.log, []).filter(entry => String(entry._id) !== id));
-    renderEntries();
+    const { error } = await sb.from('log_entries').delete().eq('id', id);
+    if (error) { alert('Could not remove entry: ' + error.message); return; }
+    await loadEntries();
   });
 
-  document.getElementById('logForm').addEventListener('submit', function(e) {
+  document.getElementById('logForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
     const entry = {
-      _id:    Date.now() + '_' + Math.random().toString(36).slice(2),
       period: document.getElementById('fPeriod').value,
       name:   document.getElementById('fStudent').value.trim(),
       tank:   document.getElementById('fTank').value,
@@ -717,10 +664,13 @@
       ampm:   document.getElementById('fAmpm').value,
       notes:  document.getElementById('fNotes').value.trim(),
     };
-    const entries = S.get(K.log, []);
-    entries.push(entry);
-    S.set(K.log, entries);
-    renderEntries();
+
+    const { error } = await sb.from('log_entries').insert(entry);
+    btn.disabled = false;
+    btn.textContent = 'Log Cleaning';
+
+    if (error) { alert('Could not save entry: ' + error.message); return; }
+
     this.reset();
     setDefaultDateTime();
     const msg = document.getElementById('successMsg');
@@ -728,27 +678,29 @@
     setTimeout(() => msg.classList.remove('show'), 2200);
   });
 
-  document.getElementById('clearBtn').addEventListener('click', () => {
-    if (confirm('Clear all cleaning entries? This cannot be undone.')) {
-      S.set(K.log, []);
-      renderEntries();
-    }
+  document.getElementById('clearBtn').addEventListener('click', async () => {
+    if (!confirm('Clear all cleaning entries? This cannot be undone.')) return;
+    const { error } = await sb.from('log_entries').delete().not('id', 'is', null);
+    if (error) { alert('Could not clear entries: ' + error.message); return; }
+    await loadEntries();
   });
+
+  // ── Real-time subscription ────────────────────────────────────────────────
+  sb.channel('realtime-log')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'log_entries' }, loadEntries)
+    .subscribe();
+
+  sb.channel('realtime-tanks')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tanks' }, loadTanks)
+    .subscribe();
 
   // ── Excel download ────────────────────────────────────────────────────────
   document.getElementById('downloadBtn').addEventListener('click', () => {
-    const entries = S.get(K.log, []);
+    if (!cachedEntries.length) { alert('No entries to export yet.'); return; }
 
-    if (!entries.length) {
-      alert('No entries to export yet.');
-      return;
-    }
-
-    // Build rows sorted by date, then period, then time
-    const sorted = entries.slice().sort((a, b) => {
+    const sorted = cachedEntries.slice().sort((a, b) => {
       if (a.date !== b.date) return a.date.localeCompare(b.date);
       if (a.period !== b.period) return a.period.localeCompare(b.period);
-      // sort by time
       const toMins = e => {
         let h = parseInt(e.hour, 10);
         if (e.ampm === 'PM' && h !== 12) h += 12;
@@ -758,46 +710,36 @@
       return toMins(a) - toMins(b);
     });
 
-    const rows = sorted.map(e => ({
+    const toRow = e => ({
       'Period':       'Period ' + e.period,
       'Student Name': e.name,
       'Fish Tank':    e.tank,
-      'Date':         (() => {
-        const [yr, mo, dy] = e.date.split('-').map(Number);
-        return new Date(yr, mo - 1, dy).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-      })(),
+      'Date':         (() => { const [yr,mo,dy] = e.date.split('-').map(Number); return new Date(yr,mo-1,dy).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); })(),
       'Time':         `${e.hour}:${e.minute} ${e.ampm}`,
       'Notes':        e.notes || '',
-    }));
+    });
 
     const wb = XLSX.utils.book_new();
 
-    // One "All Entries" sheet
-    const wsAll = XLSX.utils.json_to_sheet(rows);
-    setColWidths(wsAll, [12, 22, 22, 20, 10, 40]);
+    const wsAll = XLSX.utils.json_to_sheet(sorted.map(toRow));
+    wsAll['!cols'] = [12,22,22,20,10,40].map(w => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, wsAll, 'All Entries');
 
-    // One sheet per period
-    ['A', 'B', 'D', 'E', 'F'].forEach(period => {
-      const periodRows = rows.filter((_, i) => sorted[i].period === period);
-      if (!periodRows.length) return;
-      const ws = XLSX.utils.json_to_sheet(periodRows);
-      setColWidths(ws, [12, 22, 22, 20, 10, 40]);
+    ['A','B','D','E','F'].forEach(period => {
+      const rows = sorted.filter(e => e.period === period).map(toRow);
+      if (!rows.length) return;
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [12,22,22,20,10,40].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, `Period ${period}`);
     });
 
-    const today = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `fish_tank_log_${today}.xlsx`);
+    XLSX.writeFile(wb, `fish_tank_log_${new Date().toISOString().slice(0,10)}.xlsx`);
   });
-
-  function setColWidths(ws, widths) {
-    ws['!cols'] = widths.map(w => ({ wch: w }));
-  }
 
   // ── Init ──────────────────────────────────────────────────────────────────
   setDefaultDateTime();
-  renderEntries();
-  renderManage();
+  loadEntries();
+  loadTanks();
 </script>
 
 </body>
