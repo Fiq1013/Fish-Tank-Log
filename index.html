@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fish Tank Cleaning Log</title>
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      background: #fff;
+      color: #000;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      border-bottom: 2px solid #000;
+      padding: 28px 48px 0;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: normal;
+      margin-bottom: 4px;
+    }
+
+    header p {
+      font-size: 0.95rem;
+      color: #555;
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; }
+
+    .tab-btn {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.9rem;
+      padding: 9px 26px;
+      border: 1px solid #000;
+      border-bottom: none;
+      background: #fff;
+      color: #888;
+      cursor: pointer;
+      margin-right: -1px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .tab-btn.active { background: #000; color: #fff; }
+    .tab-btn:not(.active):hover { color: #000; }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: flex; flex: 1; }
+
+    /* ── Log tab ── */
+    #tab-log { flex-direction: row; min-height: calc(100vh - 120px); }
+
+    /* ── Form panel ── */
+    .form-panel {
+      width: 380px;
+      flex-shrink: 0;
+      border-right: 2px solid #000;
+      padding: 36px 32px;
+      overflow-y: auto;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: normal;
+      margin-bottom: 24px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .field { margin-bottom: 20px; }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      letter-spacing: 0.03em;
+      margin-bottom: 6px;
+      color: #444;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 1rem;
+      background: #fff;
+      color: #000;
+      border: 1px solid #000;
+      padding: 9px 11px;
+      outline: none;
+      border-radius: 0;
+      appearance: none;
+      transition: box-shadow 0.15s;
+    }
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+      box-shadow: 0 0 0 2px #000;
+    }
+
+    input[type="date"] {
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.5;
+    }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%23000' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 11px center;
+      padding-right: 32px;
+    }
+
+    .time-inner {
+      display: grid;
+      grid-template-columns: 1fr 10px 1fr 1fr;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .time-colon {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #999;
+      line-height: 1;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #000;
+      color: #fff;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover { background: #333; }
+
+    .success-msg {
+      margin-top: 12px;
+      font-style: italic;
+      font-size: 0.88rem;
+      color: #000;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .success-msg.show { opacity: 1; }
+
+    /* ── History panel ── */
+    .log-panel {
+      flex: 1;
+      padding: 36px 40px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .log-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .log-top h2 {
+      font-size: 1.1rem;
+      font-weight: normal;
+    }
+
+    .log-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-count {
+      font-size: 0.82rem;
+      color: #888;
+      font-style: italic;
+      margin-right: 4px;
+    }
+
+    .ghost-btn {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.78rem;
+      background: none;
+      border: 1px solid #ccc;
+      color: #888;
+      padding: 5px 11px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .ghost-btn:hover { border-color: #000; color: #000; }
+
+    .download-btn {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.78rem;
+      background: #000;
+      border: 1px solid #000;
+      color: #fff;
+      padding: 5px 11px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .download-btn:hover { background: #333; }
+
+    /* Period filter */
+    .period-filter {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.82rem;
+      padding: 5px 14px;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn.active {
+      background: #000;
+      color: #fff;
+      border-color: #000;
+    }
+
+    .filter-btn:not(.active):hover { border-color: #000; color: #000; }
+
+    .entries {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .entry-card {
+      border: 1px solid #000;
+      padding: 16px 18px;
+    }
+
+    .entry-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .entry-tank {
+      font-size: 1.1rem;
+      font-weight: bold;
+      line-height: 1.2;
+    }
+
+    .entry-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .entry-time {
+      font-size: 0.8rem;
+      color: #666;
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    .delete-btn {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.72rem;
+      background: none;
+      border: 1px solid #ddd;
+      color: #bbb;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .delete-btn:hover { border-color: #000; color: #000; }
+
+    .entry-sub {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 2px;
+    }
+
+    .entry-period-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      border: 1px solid #ccc;
+      color: #777;
+      padding: 1px 7px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .entry-notes {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: #333;
+      margin-top: 10px;
+      font-style: italic;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 0;
+      color: #bbb;
+      font-style: italic;
+      font-size: 1rem;
+    }
+
+    /* ── Manage tab ── */
+    #tab-manage {
+      flex-direction: row;
+      align-items: flex-start;
+      min-height: calc(100vh - 120px);
+    }
+
+    .manage-section {
+      flex: 1;
+      padding: 36px 40px;
+    }
+
+    .manage-section h2 {
+      font-size: 1.1rem;
+      font-weight: normal;
+      margin-bottom: 22px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .add-row input { flex: 1; }
+
+    .add-row button {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.88rem;
+      padding: 9px 16px;
+      background: #000;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .add-row button:hover { background: #333; }
+
+    .item-list { display: flex; flex-direction: column; gap: 7px; }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 13px;
+      border: 1px solid #e0e0e0;
+      font-size: 0.93rem;
+    }
+
+    .item-row span { flex: 1; }
+
+    .remove-btn {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.72rem;
+      background: none;
+      border: 1px solid #ddd;
+      color: #bbb;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .remove-btn:hover { border-color: #000; color: #000; }
+
+    .list-empty {
+      font-style: italic;
+      color: #ccc;
+      font-size: 0.88rem;
+      padding: 10px 0;
+    }
+
+    @media (max-width: 780px) {
+      header { padding: 20px 20px 0; }
+      #tab-log, #tab-manage { flex-direction: column; }
+      .form-panel { width: 100%; border-right: none; border-bottom: 2px solid #000; }
+      .log-panel { padding: 28px 20px; }
+      .manage-section { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Fish Tank Cleaning Log</h1>
+  <p>Biology — record each tank cleaning below</p>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="tab-log">Log Cleaning</button>
+    <button class="tab-btn" data-tab="tab-manage">Manage Tanks</button>
+  </nav>
+</header>
+
+<!-- LOG TAB -->
+<div class="tab-panel active" id="tab-log">
+
+  <section class="form-panel">
+    <h2 class="panel-title">New Entry</h2>
+    <form id="logForm">
+
+      <div class="field">
+        <label for="fPeriod">Class Period</label>
+        <select id="fPeriod" required>
+          <option value="" disabled selected>Select a period…</option>
+          <option value="A">Period A</option>
+          <option value="B">Period B</option>
+          <option value="D">Period D</option>
+          <option value="E">Period E</option>
+          <option value="F">Period F</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="fStudent">Your Name</label>
+        <input type="text" id="fStudent" placeholder="First and last name" required />
+      </div>
+
+      <div class="field">
+        <label for="fTank">Fish Tank</label>
+        <select id="fTank" required>
+          <option value="" disabled selected>Select a tank…</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="fDate" required />
+      </div>
+
+      <div class="field">
+        <label>Time</label>
+        <div class="time-inner">
+          <select id="fHour"></select>
+          <span class="time-colon">:</span>
+          <select id="fMinute"></select>
+          <select id="fAmpm">
+            <option>AM</option>
+            <option>PM</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fNotes">Notes <span style="color:#bbb;font-style:italic;">(optional)</span></label>
+        <textarea id="fNotes"></textarea>
+      </div>
+
+      <button type="submit" class="btn-primary">Log Cleaning</button>
+      <p class="success-msg" id="successMsg">Entry saved.</p>
+    </form>
+  </section>
+
+  <section class="log-panel">
+    <div class="log-top">
+      <h2>Cleaning History</h2>
+      <div class="log-actions">
+        <span class="log-count" id="logCount"></span>
+        <button class="download-btn" id="downloadBtn">Download Excel</button>
+        <button class="ghost-btn" id="clearBtn">Clear all</button>
+      </div>
+    </div>
+
+    <div class="period-filter">
+      <button class="filter-btn active" data-period="All">All</button>
+      <button class="filter-btn" data-period="A">Period A</button>
+      <button class="filter-btn" data-period="B">Period B</button>
+      <button class="filter-btn" data-period="D">Period D</button>
+      <button class="filter-btn" data-period="E">Period E</button>
+      <button class="filter-btn" data-period="F">Period F</button>
+    </div>
+
+    <div class="entries" id="entries"></div>
+  </section>
+</div>
+
+<!-- MANAGE TAB -->
+<div class="tab-panel" id="tab-manage">
+  <div class="manage-section">
+    <h2>Fish Tanks</h2>
+    <div class="add-row">
+      <input type="text" id="newTank" placeholder="Tank name or description" />
+      <button id="addTankBtn">Add</button>
+    </div>
+    <div class="item-list" id="tankList"></div>
+  </div>
+</div>
+
+<script>
+  // ── Storage ───────────────────────────────────────────────────────────────
+  const S = {
+    get: (k, fb) => { try { return JSON.parse(localStorage.getItem(k)) ?? fb; } catch { return fb; } },
+    set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  };
+  const K = { log: 'ftl_log', tanks: 'ftl_tanks' };
+
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Escape ────────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Time picker setup ─────────────────────────────────────────────────────
+  (function buildTimePicker() {
+    const hourSel = document.getElementById('fHour');
+    for (let h = 1; h <= 12; h++) {
+      const o = document.createElement('option');
+      o.value = String(h); o.textContent = String(h);
+      hourSel.appendChild(o);
+    }
+    const minSel = document.getElementById('fMinute');
+    for (let m = 0; m < 60; m += 5) {
+      const o = document.createElement('option');
+      o.value = String(m).padStart(2, '0');
+      o.textContent = String(m).padStart(2, '0');
+      minSel.appendChild(o);
+    }
+  })();
+
+  function setDefaultDateTime() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    document.getElementById('fDate').value = `${yyyy}-${mm}-${dd}`;
+    let h = now.getHours();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    document.getElementById('fHour').value = String(h);
+    const roundedMin = String(Math.round(now.getMinutes() / 5) * 5 % 60).padStart(2, '0');
+    document.getElementById('fMinute').value = roundedMin;
+    document.getElementById('fAmpm').value = ampm;
+  }
+
+  function formatEntryTime(e) {
+    const [year, month, day] = e.date.split('-').map(Number);
+    const d = new Date(year, month - 1, day);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return `${dateStr} · ${e.hour}:${e.minute} ${e.ampm}`;
+  }
+
+  // ── Tank dropdown ─────────────────────────────────────────────────────────
+  function refreshTankDropdown() {
+    const tanks = S.get(K.tanks, []);
+    const sel = document.getElementById('fTank');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="" disabled>Select a tank…</option>';
+    tanks.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t; o.textContent = t;
+      sel.appendChild(o);
+    });
+    if (tanks.includes(prev)) sel.value = prev; else sel.value = '';
+  }
+
+  // ── Manage tanks ──────────────────────────────────────────────────────────
+  function renderTankList() {
+    const tanks = S.get(K.tanks, []);
+    const el = document.getElementById('tankList');
+    if (!tanks.length) { el.innerHTML = '<p class="list-empty">No tanks added yet.</p>'; return; }
+    el.innerHTML = tanks.map((t, i) => `
+      <div class="item-row">
+        <span>${esc(t)}</span>
+        <button class="remove-btn" data-index="${i}">Remove</button>
+      </div>
+    `).join('');
+  }
+
+  function renderManage() { renderTankList(); refreshTankDropdown(); }
+
+  document.getElementById('tankList').addEventListener('click', e => {
+    if (!e.target.classList.contains('remove-btn')) return;
+    const tanks = S.get(K.tanks, []);
+    tanks.splice(parseInt(e.target.dataset.index, 10), 1);
+    S.set(K.tanks, tanks);
+    renderManage();
+  });
+
+  function addTank() {
+    const input = document.getElementById('newTank');
+    const val = input.value.trim();
+    if (!val) return;
+    const tanks = S.get(K.tanks, []);
+    if (!tanks.includes(val)) { tanks.push(val); tanks.sort((a, b) => a.localeCompare(b)); S.set(K.tanks, tanks); }
+    input.value = '';
+    renderManage();
+  }
+
+  document.getElementById('addTankBtn').addEventListener('click', addTank);
+  document.getElementById('newTank').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTank(); } });
+
+  // ── Period filter ─────────────────────────────────────────────────────────
+  let activePeriod = 'All';
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activePeriod = btn.dataset.period;
+      renderEntries();
+    });
+  });
+
+  // ── Log entries ───────────────────────────────────────────────────────────
+  function renderEntries() {
+    const all = S.get(K.log, []);
+    const filtered = activePeriod === 'All' ? all : all.filter(e => e.period === activePeriod);
+    const countEl = document.getElementById('logCount');
+
+    countEl.textContent = all.length === 0 ? '' : all.length === 1 ? '1 entry' : `${all.length} entries`;
+
+    const container = document.getElementById('entries');
+    if (!filtered.length) {
+      container.innerHTML = `<p class="empty-state">${activePeriod === 'All'
+        ? 'No entries yet — log the first cleaning.'
+        : `No entries for Period ${activePeriod} yet.`}</p>`;
+      return;
+    }
+
+    container.innerHTML = filtered.slice().reverse().map(e => `
+      <div class="entry-card">
+        <div class="entry-top">
+          <div class="entry-tank">${esc(e.tank)}</div>
+          <div class="entry-right">
+            <span class="entry-time">${formatEntryTime(e)}</span>
+            <button class="delete-btn" data-id="${esc(e._id)}">Remove</button>
+          </div>
+        </div>
+        <div class="entry-sub">
+          ${esc(e.name)}<span class="entry-period-tag">Period ${esc(e.period)}</span>
+        </div>
+        ${e.notes ? `<div class="entry-notes">${esc(e.notes)}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('entries').addEventListener('click', e => {
+    if (!e.target.classList.contains('delete-btn')) return;
+    const id = e.target.dataset.id;
+    S.set(K.log, S.get(K.log, []).filter(entry => String(entry._id) !== id));
+    renderEntries();
+  });
+
+  document.getElementById('logForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const entry = {
+      _id:    Date.now() + '_' + Math.random().toString(36).slice(2),
+      period: document.getElementById('fPeriod').value,
+      name:   document.getElementById('fStudent').value.trim(),
+      tank:   document.getElementById('fTank').value,
+      date:   document.getElementById('fDate').value,
+      hour:   document.getElementById('fHour').value,
+      minute: document.getElementById('fMinute').value,
+      ampm:   document.getElementById('fAmpm').value,
+      notes:  document.getElementById('fNotes').value.trim(),
+    };
+    const entries = S.get(K.log, []);
+    entries.push(entry);
+    S.set(K.log, entries);
+    renderEntries();
+    this.reset();
+    setDefaultDateTime();
+    const msg = document.getElementById('successMsg');
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 2200);
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if (confirm('Clear all cleaning entries? This cannot be undone.')) {
+      S.set(K.log, []);
+      renderEntries();
+    }
+  });
+
+  // ── Excel download ────────────────────────────────────────────────────────
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    const entries = S.get(K.log, []);
+
+    if (!entries.length) {
+      alert('No entries to export yet.');
+      return;
+    }
+
+    // Build rows sorted by date, then period, then time
+    const sorted = entries.slice().sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      if (a.period !== b.period) return a.period.localeCompare(b.period);
+      // sort by time
+      const toMins = e => {
+        let h = parseInt(e.hour, 10);
+        if (e.ampm === 'PM' && h !== 12) h += 12;
+        if (e.ampm === 'AM' && h === 12) h = 0;
+        return h * 60 + parseInt(e.minute, 10);
+      };
+      return toMins(a) - toMins(b);
+    });
+
+    const rows = sorted.map(e => ({
+      'Period':       'Period ' + e.period,
+      'Student Name': e.name,
+      'Fish Tank':    e.tank,
+      'Date':         (() => {
+        const [yr, mo, dy] = e.date.split('-').map(Number);
+        return new Date(yr, mo - 1, dy).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      })(),
+      'Time':         `${e.hour}:${e.minute} ${e.ampm}`,
+      'Notes':        e.notes || '',
+    }));
+
+    const wb = XLSX.utils.book_new();
+
+    // One "All Entries" sheet
+    const wsAll = XLSX.utils.json_to_sheet(rows);
+    setColWidths(wsAll, [12, 22, 22, 20, 10, 40]);
+    XLSX.utils.book_append_sheet(wb, wsAll, 'All Entries');
+
+    // One sheet per period
+    ['A', 'B', 'D', 'E', 'F'].forEach(period => {
+      const periodRows = rows.filter((_, i) => sorted[i].period === period);
+      if (!periodRows.length) return;
+      const ws = XLSX.utils.json_to_sheet(periodRows);
+      setColWidths(ws, [12, 22, 22, 20, 10, 40]);
+      XLSX.utils.book_append_sheet(wb, ws, `Period ${period}`);
+    });
+
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `fish_tank_log_${today}.xlsx`);
+  });
+
+  function setColWidths(ws, widths) {
+    ws['!cols'] = widths.map(w => ({ wch: w }));
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  setDefaultDateTime();
+  renderEntries();
+  renderManage();
+</script>
+
+</body>
+</html>
