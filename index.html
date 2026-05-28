@@ -278,6 +278,9 @@
       font-size: 1rem;
     }
 
+    .entry-pending { opacity: 0.5; }
+    .entry-pending .entry-time::after { content: ' · saving…'; font-style: italic; }
+
     .status-bar {
       font-size: 0.78rem;
       font-style: italic;
@@ -624,7 +627,7 @@
     }
 
     container.innerHTML = filtered.map(e => `
-      <div class="entry-card">
+      <div class="entry-card${e._pending ? ' entry-pending' : ''}">
         <div class="entry-top">
           <div class="entry-tank">${esc(e.tank)}</div>
           <div class="entry-right">
@@ -651,8 +654,6 @@
   document.getElementById('logForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = 'Saving…';
 
     const entry = {
       period: document.getElementById('fPeriod').value,
@@ -665,17 +666,28 @@
       notes:  document.getElementById('fNotes').value.trim(),
     };
 
-    const { error } = await sb.from('log_entries').insert(entry);
-    btn.disabled = false;
-    btn.textContent = 'Log Cleaning';
-
-    if (error) { alert('Could not save entry: ' + error.message); return; }
+    // Show instantly while save happens in background
+    const tempId = '_temp_' + Date.now();
+    cachedEntries.unshift({ ...entry, id: tempId, _pending: true, created_at: new Date().toISOString() });
+    renderEntries();
 
     this.reset();
     setDefaultDateTime();
     const msg = document.getElementById('successMsg');
     msg.classList.add('show');
     setTimeout(() => msg.classList.remove('show'), 2200);
+
+    btn.disabled = true;
+    const { error } = await sb.from('log_entries').insert(entry);
+    btn.disabled = false;
+
+    if (error) {
+      cachedEntries = cachedEntries.filter(e => e.id !== tempId);
+      renderEntries();
+      alert('Could not save entry: ' + error.message);
+      return;
+    }
+    // Real-time subscription will replace temp entry with the confirmed one
   });
 
   document.getElementById('clearBtn').addEventListener('click', async () => {
